@@ -3,7 +3,7 @@
 
 {
     'name': 'Customer Vendor Statement',
-    'version': '13.0.0.0.0',
+    'version': '13.0.1.0.0',
     'category': 'Accounting',
     'summary': 'Customer- Vendor Statement by Currency',
     'sequence': '10',

@@ -34,6 +34,7 @@ class CustomervendorStatementWizard(models.TransientModel):
                              'Report Type', default="receivable", required=True
                              )
 
+    # @api.multi
     def button_export_pdf(self):
         self.ensure_one()
         return self._export()

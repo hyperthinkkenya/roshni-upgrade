@@ -30,14 +30,12 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE sum(l.credit)
             END as credit
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND at.type = 'receivable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'receivable'
                                 AND l.date <= '%s' AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.amount_currency,
                                 l.company_id
         """ % (partners, date_start)
-
     def _initial_balance_sql_q1_payable(self, partners, date_start):
         return """
             SELECT l.partner_id, l.currency_id, l.company_id,
@@ -50,14 +48,12 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE sum(l.credit)
             END as credit
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND at.type = 'payable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'payable'
                                 AND l.date <= '%s' AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.amount_currency,
                                 l.company_id
         """ % (partners, date_start)
-
     def _initial_balance_sql_q1_receivable_and_payable(self, partners, date_start):
         return """
             SELECT l.partner_id, l.currency_id, l.company_id,
@@ -70,13 +66,13 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE sum(l.credit)
             END as credit
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND (at.type = 'payable' OR at.type = 'receivable')
+            WHERE l.partner_id IN (%s) AND (l.account_internal_type = 'payable' OR l.account_internal_type = 'receivable')
                                 AND l.date <= '%s' AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.amount_currency,
                                 l.company_id
         """ % (partners, date_start)
+
 
     def _initial_balance_sql_q2(self, company_id):
         return """
@@ -86,7 +82,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q1.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _initial_balance_sql_q2_payable(self, company_id):
         return """
             SELECT Q1.partner_id, debit-credit AS balance,
@@ -95,7 +90,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q1.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _initial_balance_sql_q2_receivable_and_payable(self, company_id):
         return """
             SELECT Q1.partner_id, debit-credit AS balance,
@@ -104,6 +98,7 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q1.company_id)
             WHERE c.id = %s
         """ % company_id
+
 
     def _get_account_initial_balance(self, company_id, partner_ids,
                                      date_start):
@@ -118,9 +113,8 @@ class CustomerVendorStatement(models.AbstractModel):
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
         return res
-
     def _get_account_initial_balance_payable(self, company_id, partner_ids,
-                                             date_start):
+                                     date_start):
         res = dict(map(lambda x: (x, []), partner_ids))
         partners = ', '.join([str(i) for i in partner_ids])
         date_start = datetime.strptime(
@@ -132,9 +126,8 @@ class CustomerVendorStatement(models.AbstractModel):
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
         return res
-
     def _get_account_initial_balance_receivable_and_payable(self, company_id, partner_ids,
-                                                            date_start):
+                                     date_start):
         res = dict(map(lambda x: (x, []), partner_ids))
         partners = ', '.join([str(i) for i in partner_ids])
         date_start = datetime.strptime(
@@ -164,15 +157,13 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND at.type = 'receivable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'receivable'
                                 AND '%s' < l.date AND l.date <= '%s'
             GROUP BY l.partner_id, m.name, l.date, l.date_maturity, l.name,
                                 l.ref, l.blocked, l.currency_id,
                                 l.amount_currency, l.company_id
         """ % (partners, date_start, date_end)
-
     def _display_lines_sql_q1_payable(self, partners, date_start, date_end):
         return """
             SELECT m.name AS move_id, l.partner_id, l.date, l.name,
@@ -190,15 +181,13 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND at.type = 'payable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'payable'
                                 AND '%s' < l.date AND l.date <= '%s'
             GROUP BY l.partner_id, m.name, l.date, l.date_maturity, l.name,
                                 l.ref, l.blocked, l.currency_id,
                                 l.amount_currency, l.company_id
         """ % (partners, date_start, date_end)
-
     def _display_lines_sql_q1_receivable_and_payable(self, partners, date_start, date_end):
         return """
             SELECT m.name AS move_id, l.partner_id, l.date, l.name,
@@ -216,9 +205,8 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
-            WHERE l.partner_id IN (%s) AND (at.type = 'payable' OR at.type = 'receivable')
+            WHERE l.partner_id IN (%s) AND (l.account_internal_type = 'payable' OR l.account_internal_type = 'receivable') 
                                 AND '%s' < l.date AND l.date <= '%s'
             GROUP BY l.partner_id, m.name, l.date, l.date_maturity, l.name,
                                 l.ref, l.blocked, l.currency_id,
@@ -234,7 +222,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q1.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _display_lines_sql_q2_payable(self, company_id):
         return """
             SELECT Q1.partner_id, move_id, date, date_maturity, Q1.name, ref,
@@ -244,7 +231,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q1.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _display_lines_sql_q2_receivable_and_payable(self, company_id):
         return """
             SELECT Q1.partner_id, move_id, date, date_maturity, Q1.name, ref,
@@ -273,9 +259,8 @@ class CustomerVendorStatement(models.AbstractModel):
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
         return res
-
     def _get_account_display_lines_payable(self, company_id, partner_ids, date_start,
-                                           date_end):
+                                   date_end):
         res = dict(map(lambda x: (x, []), partner_ids))
         partners = ', '.join([str(i) for i in partner_ids])
         date_start = datetime.strptime(
@@ -292,9 +277,8 @@ class CustomerVendorStatement(models.AbstractModel):
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
         return res
-
     def _get_account_display_lines_receivable_and_payable(self, company_id, partner_ids, date_start,
-                                                          date_end):
+                                   date_end):
         res = dict(map(lambda x: (x, []), partner_ids))
         partners = ', '.join([str(i) for i in partner_ids])
         date_start = datetime.strptime(
@@ -306,8 +290,7 @@ class CustomerVendorStatement(models.AbstractModel):
                             credit, amount, blocked, currency_id
         FROM Q2
         ORDER BY date, date_maturity, move_id""" % (
-            self._display_lines_sql_q1_receivable_and_payable(
-                partners, date_start, date_end),
+            self._display_lines_sql_q1_receivable_and_payable(partners, date_start, date_end),
             self._display_lines_sql_q2_receivable_and_payable(company_id)))
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
@@ -329,7 +312,6 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
             LEFT JOIN (SELECT pr.*
                 FROM account_partial_reconcile pr
@@ -343,13 +325,12 @@ class CustomerVendorStatement(models.AbstractModel):
                 ON pr.debit_move_id = l2.id
                 WHERE l2.date <= '%s'
             ) as pc ON pc.credit_move_id = l.id
-            WHERE l.partner_id IN (%s) AND at.type = 'receivable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'receivable'
                                 AND not l.reconciled AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.date, l.date_maturity,
                                 l.amount_currency, l.balance, l.move_id,
                                 l.company_id
         """ % (date_end, date_end, partners)
-
     def _show_buckets_sql_q1_payable(self, partners, date_end):
         return """
             SELECT l.partner_id, l.currency_id, l.company_id, l.move_id,
@@ -366,7 +347,6 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
             LEFT JOIN (SELECT pr.*
                 FROM account_partial_reconcile pr
@@ -380,13 +360,12 @@ class CustomerVendorStatement(models.AbstractModel):
                 ON pr.debit_move_id = l2.id
                 WHERE l2.date <= '%s'
             ) as pc ON pc.credit_move_id = l.id
-            WHERE l.partner_id IN (%s) AND at.type = 'payable'
+            WHERE l.partner_id IN (%s) AND l.account_internal_type = 'payable'
                                 AND not l.reconciled AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.date, l.date_maturity,
                                 l.amount_currency, l.balance, l.move_id,
                                 l.company_id
         """ % (date_end, date_end, partners)
-
     def _show_buckets_sql_q1_receivable_and_payable(self, partners, date_end):
         return """
             SELECT l.partner_id, l.currency_id, l.company_id, l.move_id,
@@ -403,7 +382,6 @@ class CustomerVendorStatement(models.AbstractModel):
                 ELSE l.date_maturity
             END as date_maturity
             FROM account_move_line l
-            JOIN account_account_type at ON (at.id = l.user_type_id)
             JOIN account_move m ON (l.move_id = m.id)
             LEFT JOIN (SELECT pr.*
                 FROM account_partial_reconcile pr
@@ -417,7 +395,7 @@ class CustomerVendorStatement(models.AbstractModel):
                 ON pr.debit_move_id = l2.id
                 WHERE l2.date <= '%s'
             ) as pc ON pc.credit_move_id = l.id
-            WHERE l.partner_id IN (%s) AND (at.type = 'payable' OR at.type = 'receivable')
+            WHERE l.partner_id IN (%s) AND (l.account_internal_type = 'payable' OR l.account_internal_type = 'receivable')
                                 AND not l.reconciled AND not l.blocked
             GROUP BY l.partner_id, l.currency_id, l.date, l.date_maturity,
                                 l.amount_currency, l.balance, l.move_id,
@@ -482,9 +460,8 @@ class CustomerVendorStatement(models.AbstractModel):
                minus_30, minus_60, minus_30, minus_90, minus_60, minus_90,
                minus_60, minus_120, minus_90, minus_120, minus_90, minus_120,
                minus_120)
-
     def _show_buckets_sql_q2_payable(self, today, minus_30, minus_60, minus_90,
-                                     minus_120):
+                             minus_120):
         return """
             SELECT partner_id, currency_id, date_maturity, open_due,
                             open_due_currency, move_id, company_id,
@@ -541,9 +518,8 @@ class CustomerVendorStatement(models.AbstractModel):
                minus_30, minus_60, minus_30, minus_90, minus_60, minus_90,
                minus_60, minus_120, minus_90, minus_120, minus_90, minus_120,
                minus_120)
-
     def _show_buckets_sql_q2_receivable_and_payable(self, today, minus_30, minus_60, minus_90,
-                                                    minus_120):
+                             minus_120):
         return """
             SELECT partner_id, currency_id, date_maturity, open_due,
                             open_due_currency, move_id, company_id,
@@ -610,7 +586,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q2.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _show_buckets_sql_q3_payable(self, company_id):
         return """
             SELECT Q2.partner_id, current, b_1_30, b_30_60, b_60_90, b_90_120,
@@ -620,7 +595,6 @@ class CustomerVendorStatement(models.AbstractModel):
             JOIN res_company c ON (c.id = Q2.company_id)
             WHERE c.id = %s
         """ % company_id
-
     def _show_buckets_sql_q3_receivable_and_payable(self, company_id):
         return """
             SELECT Q2.partner_id, current, b_1_30, b_30_60, b_60_90, b_90_120,
@@ -642,7 +616,6 @@ class CustomerVendorStatement(models.AbstractModel):
             FROM Q3
             GROUP BY partner_id, currency_id
         """
-
     def _show_buckets_sql_q4_payable(self):
         return """
             SELECT partner_id, currency_id, sum(current) as current,
@@ -654,7 +627,6 @@ class CustomerVendorStatement(models.AbstractModel):
             FROM Q3
             GROUP BY partner_id, currency_id
         """
-
     def _show_buckets_sql_q4_receivable_and_payable(self):
         return """
             SELECT partner_id, currency_id, sum(current) as current,
@@ -701,7 +673,6 @@ class CustomerVendorStatement(models.AbstractModel):
         for row in self.env.cr.dictfetchall():
             res[row.pop('partner_id')].append(row)
         return res
-
     def _get_account_show_buckets_payable(self, company_id, partner_ids, date_end):
         res = dict(map(lambda x: (x, []), partner_ids))
         partners = ', '.join([str(i) for i in partner_ids])
@@ -743,8 +714,7 @@ class CustomerVendorStatement(models.AbstractModel):
         FROM Q4
         GROUP BY partner_id, currency_id, current, b_1_30, b_30_60, b_60_90,
         b_90_120, b_over_120""" % (
-            self._show_buckets_sql_q1_receivable_and_payable(
-                partners, date_end),
+            self._show_buckets_sql_q1_receivable_and_payable(partners, date_end),
             self._show_buckets_sql_q2_receivable_and_payable(
                 self._bucket_dates['today'],
                 self._bucket_dates['minus_30'],
@@ -757,6 +727,7 @@ class CustomerVendorStatement(models.AbstractModel):
             res[row.pop('partner_id')].append(row)
         return res
 
+    # @api.multi
     def _get_report_values(self, docids, data=None):
         model = self.env.context.get('active_model')
         docs = self.env[model].browse(self.env.context.get('active_id'))
@@ -777,8 +748,7 @@ class CustomerVendorStatement(models.AbstractModel):
             for partner_id in partner_ids:
                 balance_start_to_display[partner_id] = {}
                 for line in balance_start[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in balance_start_to_display[partner_id]:
                         balance_start_to_display[partner_id][currency] = []
                     balance_start_to_display[partner_id][currency] = \
@@ -797,8 +767,7 @@ class CustomerVendorStatement(models.AbstractModel):
                 date_end_display[partner_id] = self._format_date_to_partner_lang(
                     date_end, partner_id)
                 for line in lines[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in lines_to_display[partner_id]:
                         lines_to_display[partner_id][currency] = []
                         currency_to_display[partner_id][currency] = currency
@@ -840,8 +809,7 @@ class CustomerVendorStatement(models.AbstractModel):
             for partner_id in partner_ids:
                 balance_start_to_display[partner_id] = {}
                 for line in balance_start[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in balance_start_to_display[partner_id]:
                         balance_start_to_display[partner_id][currency] = []
                     balance_start_to_display[partner_id][currency] = \
@@ -860,8 +828,7 @@ class CustomerVendorStatement(models.AbstractModel):
                 date_end_display[partner_id] = self._format_date_to_partner_lang(
                     date_end, partner_id)
                 for line in lines[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in lines_to_display[partner_id]:
                         lines_to_display[partner_id][currency] = []
                         currency_to_display[partner_id][currency] = currency
@@ -903,8 +870,7 @@ class CustomerVendorStatement(models.AbstractModel):
             for partner_id in partner_ids:
                 balance_start_to_display[partner_id] = {}
                 for line in balance_start[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in balance_start_to_display[partner_id]:
                         balance_start_to_display[partner_id][currency] = []
                     balance_start_to_display[partner_id][currency] = \
@@ -923,8 +889,7 @@ class CustomerVendorStatement(models.AbstractModel):
                 date_end_display[partner_id] = self._format_date_to_partner_lang(
                     date_end, partner_id)
                 for line in lines[partner_id]:
-                    currency = self.env['res.currency'].browse(
-                        line['currency_id'])
+                    currency = self.env['res.currency'].browse(line['currency_id'])
                     if currency not in lines_to_display[partner_id]:
                         lines_to_display[partner_id][currency] = []
                         currency_to_display[partner_id][currency] = currency
