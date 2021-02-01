@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_order_form_inh1" model="ir.ui.view">
+            <field name="name">sale.order.form.inh</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <button name="action_cancel" position="after">
+                    <button name="print_loading_sheet" string="Print Loading Sheet" type="object"/>
+                </button>
+                <field name="client_order_ref" position="replace">
+                </field>
+                <field name="payment_term_id" position="after">
+                    <field name="client_order_ref"/>
+                </field>
+                <xpath expr="//field[@name='currency_id']" position="before">
+                    <field name="amended" invisible="1"/>
+                </xpath>
+            </field>
+        </record>
+
+        <menuitem action="sale.action_orders" name="Loading Sheet"
+            id="sale.menu_sale_order" parent="sale.sale_order_menu"
+            sequence="12" groups="sales_team.group_sale_salesman,sales_team.group_sale_manager"/>
+
+
+        <record id="invoice_form_custom" model="ir.ui.view">
+            <field name="name">account.move.form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <button name="action_invoice_sent" position="after">
+                    <button name="custom_invoice_print" string="Print" type="object" attrs="{'invisible':[('state', '!=', 'open')]}" class="oe_highlight" groups="base.group_user"/>
+                    <!-- '|',('sent','=',True),  -->
+                    <button name="custom_invoice_print" string="Print Invoice" type="object" attrs="{'invisible':[('state', '!=', 'open')]}" groups="base.group_user"/>
+                    <!-- '|',('sent','=',False),  -->
+                </button>
+                <field name="invoice_date" position="after">
+                    <field name="vehicle_number"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="invoice_supplier_form_custom" model="ir.ui.view">
+            <field name="name">account.move.supplier.form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//page[@name='other_info']/group/group/field[@name='to_check']"
+                       positions="after">
+                    <field name="custom_entry_number"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="product_uom_form_view_inh1" model="ir.ui.view">
+            <field name="name">uom.uom.form</field>
+            <field name="model">uom.uom</field>
+            <field name="inherit_id" ref="uom.product_uom_form_view"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="general_name"/>
+                </field>
+            </field>
+        </record>
+
+        <record id="view_batch_payment_form_inher" model="ir.ui.view">
+            <field name="name">account.batch.payment.form</field>
+            <field name="model">account.batch.payment</field>
+            <field name="inherit_id" ref="account_batch_payment.view_batch_payment_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//button[@name='print_batch_payment']" position="replace">
+                    <button name="report_customization.report_account_batch_deposit" string="Print"
+                        type="action" class="btn-primary"/>
+                </xpath>
+                <field name="journal_id" position="after">
+                    <field name="pay_in_slip"/>
+                </field>
+                <field name="communication" position="after">
+                    <field name="bank_acc_id" options="{'no_create': True}"/>
+                    <field name="branch"/>
+                </field>
+                <xpath expr="//field[@name='payment_ids']/form/group/group[2]/field[@name='communication']" position="after">
+                    <field name="bank_acc_id" options="{'no_create': True}"/>
+                    <field name="branch"/>
+                </xpath>
+            </field>
+        </record>
+
+	    <record id="view_partner_form_inh" model="ir.ui.view">
+            <field name="name"> res.partner.form.inh</field>
+            <field name="model">res.partner</field>
+            <field name="inherit_id" ref="base.view_partner_form"/>
+            <field name="arch" type="xml">
+                <field name="category_id" position="after">
+                    <field name="customer_flag"/>
+                </field>
+            </field>
+        </record>
+
+    </data>
+</odoo>
