@@ -1,0 +1,20 @@
+
+.table-custom {
+    tbody > td {
+        border-top: 1px solid white!important;
+    }
+    tbody > tr {
+        border-top: 2px solid black!important;
+        border-bottom: 2px solid black!important;
+    }
+    > thead > tr > th {
+        border: 2px solid black!important;
+    }
+    > thead:first-child > tr:first-child > th {
+    	border-top: 2px solid black!important;
+    }
+}
+
+/*.table th, .table td {
+    padding: 0.15rem !important;
+}*/
