@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_stock_picking_form_in" model="ir.ui.view">
+            <field name="name">stock.picking.form.inh</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+                <field name="origin" position="after">
+                    <field name="move_lines_pro_ids" invisible="1"/>
+                    <field name="return_product_ids" widget="many2many_tags" states="done" domain="[('id', 'in', move_lines_pro_ids)]"/>
+                </field>
+                 <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="has_credit_note" invisible="1"/>
+                    <field name="credit_invoice_id" invisible="1"/>
+                </xpath>
+                <xpath expr="//header" position="inside">
+                    <button name="create_credit_note" string="Create Credit Note" type="object" class="oe_highlight" groups="base.group_user" 
+                        attrs="{'invisible': ['|', '|',('state', '!=', 'done'), ('has_credit_note', '=', True), ('picking_type_code', '!=', 'incoming')]}"/>
+                </xpath>
+                <xpath expr="//div[@name='button_box']" position="inside">
+                    <button name="action_see_credit_note" string="Credit Notes" type="object" class="oe_stat_button" icon="fa-pencil-square-o" attrs="{'invisible': [('has_credit_note', '=', False)]}"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record model="ir.ui.view" id="view_stock_picking_search_inher">
+            <field name="name">stock.picking.inherit.search</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+            <field name="arch" type="xml">
+                <xpath expr="//filter[@name='done']" position="after">
+                    <filter string="Sale Order Amended" name="amended" domain="[('sale_id.amended', '=', True)]" />
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>
