@@ -13,18 +13,18 @@ from odoo.exceptions import UserError
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
-    @api.model
     @api.constrains('discount')
     def restrict_discount_above_100(self):
-        if self.discount > 100:
-            raise UserError(_("Discount value cannot be greater than 100"))
+        for line in self:
+            if line.discount > 100:
+                raise UserError(_("Discount value cannot be greater than 100"))
 
 
 class AccountMoveLine(models.Model):
     _inherit = 'account.move.line'
 
-    @api.model
     @api.constrains('discount')
     def restrict_discount_above_100(self):
-        if self.discount > 100:
-            raise UserError(_("Discount value cannot be greater than 100"))
+        for line in self:
+            if line.discount > 100:
+                raise UserError(_("Discount value cannot be greater than 100"))
