@@ -7,7 +7,7 @@
 ##############################################################################
 
 {
-    'name' : 'Restrict Discount Above 100',
+    'name': 'Restrict Discount Above 100',
     'version': '13.0.1.0',
     'summary': 'Restrict Discount Above 100',
     'category': 'Sale',
@@ -16,7 +16,7 @@
     """,
     'author': 'Caret IT Solutions Pvt. Ltd.',
     'website': 'http://www.caretit.com',
-    'depends': ['sale'],
+    'depends': ['sale', 'account'],
     'images': ['static/description/banner.jpg'],
     'price': 12.00,
     'currency': 'EUR',
