@@ -1,0 +1,4 @@
+[submodule "hyperthinkkenya/roshni-upgrade"]
+	path = hyperthinkkenya/roshni-upgrade
+	url = git@github.com:hyperthinkkenya/roshni-upgrade.git
+	branch = Stage1
