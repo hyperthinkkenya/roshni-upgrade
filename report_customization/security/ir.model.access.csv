@@ -1,3 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_dispatch_register_employee,dispatch.register.emp,model_dispatch_register,base.group_user,1,1,1,1
-access_dispatch_register_line_employee,dispatch.register.line.emp,model_dispatch_register_line,base.group_user,1,1,1,1
